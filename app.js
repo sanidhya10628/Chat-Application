@@ -17,8 +17,19 @@ app.use(express.urlencoded({ extended: true }))
 app.use(express.json());
 
 
-io.on('connection', () => {
+io.on('connection', (socket) => {
     console.log("New Websocket Connection")
+
+    socket.emit('message', "Welcome!")
+    socket.broadcast.emit('message', 'A user has joined')
+
+    socket.on('sendMessage', (message) => {
+        io.emit('message', message)
+    })
+
+    socket.on('disconnect', () => {
+        io.emit('message', 'A user has left!')
+    })
 })
 
 // Listen On PORT
