@@ -6,14 +6,38 @@ const messageFormInput = messageForm.querySelector('input')
 const messageFormButton = messageForm.querySelector('button')
 const sendLocationButton = document.getElementById('send-location')
 const messages = document.getElementById('messages')
-
+const sidebar = document.getElementById('sidebar')
 // Templates
 const messageTemplate = document.getElementById('message-template').innerHTML
 const locationMessageTemplate = document.getElementById('location-message-template').innerHTML
-
+const sidebarTemplate = document.getElementById('sidebar-template').innerHTML
 
 // Options
 const { username, room } = Qs.parse(location.search, { ignoreQueryPrefix: true })
+
+const autoScroll = () => {
+    // New Message element
+    const newMessage = messages.lastElementChild
+
+    // Height of new Message
+    const newMessageStyle = getComputedStyle(newMessage)
+    const newMessageMargin = parseInt(newMessageStyle.marginBottom)
+    const newMessageHeight = newMessage.offsetHeight + newMessageMargin
+
+    // Visible Height
+    const visibleHeight = messages.offsetHeight
+
+    // Height of Messages Container
+    const containerHeight = messages.scrollHeight
+
+    // How far have i scrolled ?
+    const scrollOffSet = messages.scrollTop + visibleHeight
+
+    if (containerHeight - newMessageHeight <= scrollOffSet) {
+        messages.scrollTop = messages.scrollHeight
+    }
+
+}
 
 socket.on('message', (message) => {
     console.log(message);
@@ -23,6 +47,7 @@ socket.on('message', (message) => {
         createdAt: moment(message.createdAt).format('h:mm a')
     })
     messages.insertAdjacentHTML('beforeend', html)
+    autoScroll()
 })
 
 socket.on('locationMessage', (message) => {
@@ -34,6 +59,16 @@ socket.on('locationMessage', (message) => {
     })
 
     messages.insertAdjacentHTML('beforeend', html)
+    autoScroll()
+})
+
+socket.on('roomData', ({ room, users }) => {
+    const html = Mustache.render(sidebarTemplate, {
+        room,
+        users
+    })
+
+    sidebar.innerHTML = html
 })
 
 messageForm.addEventListener('submit', (e) => {
